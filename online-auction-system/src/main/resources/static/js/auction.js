@@ -1,13 +1,7 @@
-/**
- * Online Auction System - JavaScript
- *
- * @author Sharieff-Suhaib
- * @since 2025-01-21 14:58:23 UTC
- */
-
 let websocket = null;
 let currentUser = null;
 let auctions = [];
+let selectedImageFile = null;
 
 // ============================================================================
 // INITIALIZATION
@@ -16,7 +10,7 @@ let auctions = [];
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🏆 Online Auction System Initialized');
     console.log('👤 Developer: Sharieff-Suhaib');
-    console.log('📅 Date: 2025-01-21 14:58:23 UTC');
+    console.log('📅 Date: 2025-10-21 16:53:42 UTC');
 
     const userStr = localStorage.getItem('currentUser');
     if (userStr) {
@@ -29,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initWebSocket();
         loadAuctions();
         startTimerUpdates();
+        setupAuctionSummaryUpdater();
     }
 });
 
@@ -42,11 +37,6 @@ function updateNavbar() {
         document.getElementById('nav-register')?.classList.add('hidden');
         document.getElementById('nav-sell')?.classList.remove('hidden');
         document.getElementById('nav-logout')?.classList.remove('hidden');
-    } else {
-        document.getElementById('nav-login')?.classList.remove('hidden');
-        document.getElementById('nav-register')?.classList.remove('hidden');
-        document.getElementById('nav-sell')?.classList.add('hidden');
-        document.getElementById('nav-logout')?.classList.add('hidden');
     }
 }
 
@@ -57,15 +47,117 @@ function logout() {
 }
 
 // ============================================================================
+// IMAGE UPLOAD & PREVIEW
+// ============================================================================
+
+window.previewImage = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Image size must be less than 5MB');
+        event.target.value = '';
+        return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        event.target.value = '';
+        return;
+    }
+
+    // Store the file for later upload
+    selectedImageFile = file;
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('preview-img').src = e.target.result;
+        document.getElementById('image-preview').classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+};
+
+// ✅ NEW: Upload image to server
+async function uploadImage(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/upload/image', {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to upload image');
+    }
+
+    const data = await response.json();
+    return data.imageUrl; // Returns: /images/products/uuid.jpg
+}
+
+// ============================================================================
+// AUCTION SUMMARY UPDATER
+// ============================================================================
+
+function setupAuctionSummaryUpdater() {
+    const startSelect = document.getElementById('auction-start');
+    const durationSelect = document.getElementById('auction-duration');
+
+    if (startSelect && durationSelect) {
+        startSelect.addEventListener('change', updateAuctionSummary);
+        durationSelect.addEventListener('change', updateAuctionSummary);
+        updateAuctionSummary();
+    }
+}
+
+function updateAuctionSummary() {
+    const startValue = document.getElementById('auction-start').value;
+    const durationMinutes = parseInt(document.getElementById('auction-duration').value);
+
+    const now = new Date();
+    let startTime;
+
+    if (startValue === 'now') {
+        startTime = new Date(now.getTime() + 10000);
+    } else {
+        const startMinutes = parseInt(startValue);
+        startTime = new Date(now.getTime() + startMinutes * 60000);
+    }
+
+    const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
+
+    const summaryText = `
+        <strong>Start:</strong> ${startTime.toLocaleString()}<br>
+        <strong>End:</strong> ${endTime.toLocaleString()}<br>
+        <strong>Duration:</strong> ${durationMinutes} minutes (${(durationMinutes / 60).toFixed(1)} hours)
+    `;
+
+    document.getElementById('summary-text').innerHTML = summaryText;
+}
+
+// ============================================================================
 // SELL PRODUCT MODAL
 // ============================================================================
 
 function showSellModal() {
+    if (!currentUser) {
+        alert('Please login first');
+        window.location.href = '/login';
+        return;
+    }
     document.getElementById('sell-modal').classList.remove('hidden');
+    updateAuctionSummary();
 }
 
 function closeSellModal() {
     document.getElementById('sell-modal').classList.add('hidden');
+    document.getElementById('sell-form').reset();
+    document.getElementById('image-preview').classList.add('hidden');
+    selectedImageFile = null;
 }
 
 document.getElementById('sell-form')?.addEventListener('submit', async (e) => {
@@ -76,17 +168,49 @@ document.getElementById('sell-form')?.addEventListener('submit', async (e) => {
         return;
     }
 
-    const productData = {
-        name: document.getElementById('product-name').value,
-        description: document.getElementById('product-description').value,
-        category: document.getElementById('product-category').value,
-        startingPrice: parseFloat(document.getElementById('product-price').value),
-        imageUrl: document.getElementById('product-image').value,
-        sellerId: currentUser.id
-    };
+    if (!selectedImageFile) {
+        alert('Please upload a product image');
+        return;
+    }
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = '⏳ Uploading image...';
+    submitBtn.disabled = true;
 
     try {
-        // ✅ STEP 1: Create Product
+        // ✅ STEP 1: Upload Image First
+        const imageUrl = await uploadImage(selectedImageFile);
+        console.log('✅ Image uploaded:', imageUrl);
+
+        submitBtn.textContent = '⏳ Creating product...';
+
+        // Get auction timing
+        const startValue = document.getElementById('auction-start').value;
+        const durationMinutes = parseInt(document.getElementById('auction-duration').value);
+
+        const now = new Date();
+        let startTime;
+
+        if (startValue === 'now') {
+            startTime = new Date(now.getTime() + 10000);
+        } else {
+            const startMinutes = parseInt(startValue);
+            startTime = new Date(now.getTime() + startMinutes * 60000);
+        }
+
+        const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
+
+        // ✅ STEP 2: Create Product (with short URL, not Base64)
+        const productData = {
+            name: document.getElementById('product-name').value,
+            description: document.getElementById('product-description').value,
+            category: document.getElementById('product-category').value,
+            startingPrice: parseFloat(document.getElementById('product-price').value),
+            imageUrl: imageUrl, // ✅ Short URL instead of Base64
+            sellerId: currentUser.id
+        };
+
         const productResponse = await fetch('/api/products', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -94,22 +218,21 @@ document.getElementById('sell-form')?.addEventListener('submit', async (e) => {
         });
 
         if (!productResponse.ok) {
-            throw new Error('Failed to create product');
+            const error = await productResponse.json();
+            throw new Error(error.message || 'Failed to create product');
         }
 
         const product = await productResponse.json();
         console.log('✅ Product created:', product);
 
-        // ✅ STEP 2: Create Auction for the Product
-        const now = new Date();
-        const startTime = new Date(now.getTime() + 60000); // Start in 1 minute
-        const endTime = new Date(now.getTime() + 3600000); // End in 1 hour
+        submitBtn.textContent = '⏳ Creating auction...';
 
+        // ✅ STEP 3: Create Auction
         const auctionData = {
             productId: product.id,
             startTime: startTime.toISOString(),
             endTime: endTime.toISOString(),
-            minimumIncrement: 10.00
+            minimumIncrement: parseFloat(document.getElementById('bid-increment').value)
         };
 
         const auctionResponse = await fetch('/api/auctions', {
@@ -119,22 +242,23 @@ document.getElementById('sell-form')?.addEventListener('submit', async (e) => {
         });
 
         if (!auctionResponse.ok) {
-            throw new Error('Failed to create auction');
+            const error = await auctionResponse.json();
+            throw new Error(error.message || 'Failed to create auction');
         }
 
         const auction = await auctionResponse.json();
         console.log('✅ Auction created:', auction);
 
-        showNotification('✅ Product and auction created successfully!', 'success');
+        showNotification('✅ Product listed successfully! Auction will start soon.', 'success');
         closeSellModal();
-        document.getElementById('sell-form').reset();
-
-        // ✅ RELOAD AUCTIONS to show new item
-        loadAuctions();
+        setTimeout(() => loadAuctions(), 2000);
 
     } catch (error) {
-        console.error('❌ Error creating product/auction:', error);
+        console.error('❌ Error:', error);
         showNotification('Error: ' + error.message, 'error');
+    } finally {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
     }
 });
 
@@ -233,7 +357,7 @@ async function loadAuctions() {
         const response = await fetch('/api/auctions');
 
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            throw new Error(`HTTP ${response.status}`);
         }
 
         auctions = await response.json();
@@ -279,22 +403,30 @@ function displayAuctions(auctionList) {
                     <div class="bid-form">
                         <input type="number"
                                id="bid-amount-${auction.id}"
-                               placeholder="Enter bid amount"
+                               placeholder="Enter your bid"
                                min="${parseFloat(auction.currentBid) + parseFloat(auction.minimumIncrement)}"
                                step="${auction.minimumIncrement}" />
                         <button class="btn btn-success"
                                 onclick="placeBid(${auction.id})">
-                            Place Bid
+                            💰 Place Bid
                         </button>
                     </div>
-                    <p style="margin-top: 0.5rem; color: var(--text-light);">
-                        Min: $${(parseFloat(auction.currentBid) + parseFloat(auction.minimumIncrement)).toFixed(2)}
+                    <p style="margin-top: 0.5rem; color: var(--text-light); font-size: 0.9rem;">
+                        Minimum bid: $${(parseFloat(auction.currentBid) + parseFloat(auction.minimumIncrement)).toFixed(2)}
+                    </p>
+                ` : auction.status === 'SCHEDULED' ? `
+                    <p style="text-align: center; color: var(--warning-color); font-weight: 600;">
+                        ⏰ Auction starts soon!
                     </p>
                 ` : ''}
 
                 ${auction.status === 'COMPLETED' && auction.winnerName ? `
                     <div class="success-message">
                         🏆 Won by <strong>${auction.winnerName}</strong> for $${auction.winningBid.toFixed(2)}
+                    </div>
+                ` : auction.status === 'COMPLETED' ? `
+                    <div class="error-message">
+                        ❌ Auction ended with no bids
                     </div>
                 ` : ''}
 
@@ -335,6 +467,7 @@ async function placeBid(auctionId) {
         if (response.ok) {
             showNotification('✅ Bid placed successfully!', 'success');
             bidAmountInput.value = '';
+            loadBidHistory(auctionId);
         } else {
             const error = await response.json();
             showNotification(error.message || 'Failed to place bid', 'error');
@@ -354,7 +487,7 @@ async function loadBidHistory(auctionId) {
         if (!bidHistory) return;
 
         if (bids.length === 0) {
-            bidHistory.innerHTML = '<p class="text-center" style="color: var(--text-light);">No bids yet</p>';
+            bidHistory.innerHTML = '<p class="text-center" style="color: var(--text-light); font-size: 0.9rem;">No bids yet. Be the first!</p>';
             return;
         }
 
@@ -418,6 +551,7 @@ function showNotification(message, type = 'info') {
         border-radius: 0.5rem;
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         z-index: 9999;
+        font-weight: 600;
         animation: slideIn 0.3s ease-out;
     `;
 
@@ -426,7 +560,7 @@ function showNotification(message, type = 'info') {
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease-out';
         setTimeout(() => notification.remove(), 300);
-    }, 3000);
+    }, 4000);
 }
 
 window.filterAuctions = function(status) {
@@ -439,7 +573,7 @@ window.filterAuctions = function(status) {
     displayAuctions(filtered);
 };
 
-// Add animations
+// Add animations and styles
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideIn {
@@ -457,7 +591,7 @@ style.textContent = `
         top: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0,0,0,0.5);
+        background-color: rgba(0,0,0,0.7);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -466,19 +600,69 @@ style.textContent = `
         background: white;
         padding: 2rem;
         border-radius: 1rem;
-        max-width: 500px;
+        max-width: 600px;
         width: 90%;
         max-height: 90vh;
         overflow-y: auto;
+    }
+    .modal-content h2 {
+        margin-bottom: 1.5rem;
+        color: var(--primary-color);
+    }
+    .modal-content h3 {
+        margin: 1.5rem 0 1rem 0;
+        color: var(--text-dark);
+        font-size: 1.1rem;
     }
     .close {
         float: right;
         font-size: 2rem;
         cursor: pointer;
+        color: var(--danger-color);
+    }
+    .close:hover {
+        color: var(--text-dark);
+    }
+    .image-preview {
+        margin-top: 1rem;
+        text-align: center;
+    }
+    .image-preview img {
+        max-width: 100%;
+        max-height: 200px;
+        border-radius: 0.5rem;
+        border: 2px solid var(--border-color);
+    }
+    .form-section {
+        background: var(--light-bg);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+    }
+    .auction-summary {
+        background: #e0f2fe;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+        border-left: 4px solid var(--primary-color);
+    }
+    .auction-summary h4 {
+        margin-bottom: 0.5rem;
+        color: var(--primary-color);
+    }
+    .auction-summary p {
+        margin: 0;
+        line-height: 1.8;
+    }
+    .form-group small {
+        display: block;
+        margin-top: 0.25rem;
+        color: var(--text-light);
+        font-size: 0.875rem;
     }
 `;
 document.head.appendChild(style);
 
 console.log('✅ Auction System JavaScript Loaded Successfully');
 console.log('👤 Developer: Sharieff-Suhaib');
-console.log('📅 Date: 2025-01-21 14:58:23 UTC');
+console.log('📅 Date: 2025-10-21 15:06:02 UTC');

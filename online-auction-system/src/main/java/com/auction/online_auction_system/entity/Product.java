@@ -12,6 +12,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Product Entity - Updated for large image storage
+ *
+ * @author Sharieff-Suhaib
+ * @since 2025-10-21 16:53:42 UTC
+ */
 @Entity
 @Table(name = "products")
 @Data
@@ -29,7 +35,9 @@ public class Product {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "image_url", length = 500)
+    // ✅ FIXED: Changed to TEXT to support Base64 images
+    @Lob
+    @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
     @Column(nullable = false, length = 100)

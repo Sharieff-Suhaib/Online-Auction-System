@@ -43,39 +43,99 @@
     </div>
 </section>
 
+<!-- ✅ ENHANCED SELL MODAL -->
 <div id="sell-modal" class="modal hidden">
     <div class="modal-content">
         <span class="close" onclick="closeSellModal()">&times;</span>
-        <h2>Sell a Product</h2>
+        <h2>🏷️ List Your Product for Auction</h2>
         <form id="sell-form">
+            <!-- Product Details -->
             <div class="form-group">
                 <label>Product Name *</label>
-                <input type="text" id="product-name" required>
+                <input type="text" id="product-name" required placeholder="e.g., iPhone 15 Pro Max">
             </div>
+
             <div class="form-group">
                 <label>Description</label>
-                <textarea id="product-description" rows="3"></textarea>
+                <textarea id="product-description" rows="3" placeholder="Describe your product..."></textarea>
             </div>
+
             <div class="form-group">
                 <label>Category *</label>
                 <select id="product-category" required>
-                    <option value="Electronics">Electronics</option>
-                    <option value="Furniture">Furniture</option>
-                    <option value="Clothing">Clothing</option>
-                    <option value="Books">Books</option>
-                    <option value="Sports">Sports</option>
-                    <option value="Other">Other</option>
+                    <option value="">-- Select Category --</option>
+                    <option value="Electronics">📱 Electronics</option>
+                    <option value="Furniture">🪑 Furniture</option>
+                    <option value="Clothing">👕 Clothing</option>
+                    <option value="Books">📚 Books</option>
+                    <option value="Sports">⚽ Sports</option>
+                    <option value="Jewelry">💍 Jewelry</option>
+                    <option value="Art">🎨 Art</option>
+                    <option value="Vehicles">🚗 Vehicles</option>
+                    <option value="Other">📦 Other</option>
                 </select>
             </div>
+
             <div class="form-group">
-                <label>Starting Price *</label>
-                <input type="number" id="product-price" step="0.01" min="0.01" required>
+                <label>Starting Price (USD) *</label>
+                <input type="number" id="product-price" step="0.01" min="0.01" required placeholder="100.00">
             </div>
+
+            <!-- ✅ IMAGE UPLOAD -->
             <div class="form-group">
-                <label>Image URL</label>
-                <input type="url" id="product-image">
+                <label>Product Image *</label>
+                <input type="file" id="product-image" accept="image/*" required onchange="previewImage(event)">
+                <div id="image-preview" class="image-preview hidden">
+                    <img id="preview-img" src="" alt="Preview">
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary btn-block">List Product</button>
+
+            <!-- ✅ AUCTION TIMING -->
+            <div class="form-section">
+                <h3>⏰ Auction Timing</h3>
+
+                <div class="form-group">
+                    <label>Start Time *</label>
+                    <select id="auction-start" required>
+                        <option value="now">🔴 Start Immediately (Live Now)</option>
+                        <option value="5">⏱️ Start in 5 minutes</option>
+                        <option value="15">⏱️ Start in 15 minutes</option>
+                        <option value="30">⏱️ Start in 30 minutes</option>
+                        <option value="60">⏱️ Start in 1 hour</option>
+                        <option value="120">⏱️ Start in 2 hours</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Auction Duration *</label>
+                    <select id="auction-duration" required>
+                        <option value="10">10 minutes (Quick Sale)</option>
+                        <option value="30">30 minutes</option>
+                        <option value="60" selected>1 hour (Recommended)</option>
+                        <option value="120">2 hours</option>
+                        <option value="180">3 hours</option>
+                        <option value="360">6 hours</option>
+                        <option value="720">12 hours</option>
+                        <option value="1440">24 hours (1 day)</option>
+                        <option value="2880">48 hours (2 days)</option>
+                        <option value="4320">72 hours (3 days)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Minimum Bid Increment (USD) *</label>
+                    <input type="number" id="bid-increment" step="1" min="1" value="10" required>
+                    <small>Bidders must increase bid by at least this amount</small>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="auction-summary">
+                <h4>📋 Auction Summary</h4>
+                <p id="summary-text">Configure auction details above</p>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">🚀 List Product & Start Auction</button>
         </form>
     </div>
 </div>
@@ -84,7 +144,7 @@
     <div class="container">
         <p>&copy; 2025 Online Auction System</p>
         <p>Developer: <strong>Sharieff-Suhaib</strong></p>
-        <p>Date: 2025-10-21 14:38:21 UTC</p>
+        <p>Date: 2025-10-21 15:06:02 UTC</p>
     </div>
 </footer>
 
