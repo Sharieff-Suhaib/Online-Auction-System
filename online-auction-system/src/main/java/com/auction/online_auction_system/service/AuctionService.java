@@ -40,6 +40,12 @@ public class AuctionService {
         auction.setProduct(product);
         auction.setStartTime(auctionDTO.getStartTime());
         auction.setEndTime(auctionDTO.getEndTime());
+        if (auctionDTO.getStartTime() == null) {
+            auction.setStartTime(LocalDateTime.now().plusMinutes(1));
+        }
+        if (auctionDTO.getEndTime() == null) {
+            auction.setEndTime(auction.getStartTime().plusHours(1));
+        }
         auction.setCurrentBid(product.getStartingPrice());
         auction.setMinimumIncrement(auctionDTO.getMinimumIncrement() != null ?
                 auctionDTO.getMinimumIncrement() : auction.getMinimumIncrement());

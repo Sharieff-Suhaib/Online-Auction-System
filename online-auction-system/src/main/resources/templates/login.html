@@ -54,7 +54,7 @@
     <div class="container">
         <p>&copy; 2025 Online Auction System</p>
         <p>Developer: <strong>Sharieff-Suhaib</strong></p>
-        <p>Date: 2025-10-21 14:44:05 UTC</p>
+        <p>Date: 2025-10-21 17:31:37 UTC</p>
     </div>
 </footer>
 
@@ -69,7 +69,6 @@
         const password = document.getElementById('password').value;
 
         try {
-            // ✅ Use /api/users/login endpoint with password validation
             const response = await fetch('/api/users/login', {
                 method: 'POST',
                 headers: {
@@ -83,13 +82,8 @@
 
             if (response.ok) {
                 const user = await response.json();
-
-                // Store user in localStorage
                 localStorage.setItem('currentUser', JSON.stringify(user));
-
                 console.log('✅ Login successful:', user.username);
-
-                // Redirect to auction page
                 window.location.href = '/auction';
             } else {
                 const error = await response.json();
@@ -103,7 +97,7 @@
         }
     });
 
-    console.log('🔐 Login Page - Sharieff-Suhaib - 2025-10-21 14:44:05 UTC');
+    console.log('🔐 Login Page - Sharieff-Suhaib - 2025-10-21 17:31:37 UTC');
 </script>
 </body>
 </html>

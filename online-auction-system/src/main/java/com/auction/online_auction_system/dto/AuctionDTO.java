@@ -1,6 +1,7 @@
 package com.auction.online_auction_system.dto;
 
 import com.auction.online_auction_system.entity.Auction;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -10,7 +11,6 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
 
 @Data
 @Builder
@@ -29,9 +29,11 @@ public class AuctionDTO {
     private String productDescription;
 
     @NotNull(message = "Start time is required")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime startTime;
 
     @NotNull(message = "End time is required")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime endTime;
 
     private BigDecimal currentBid;
@@ -41,6 +43,8 @@ public class AuctionDTO {
     private BigDecimal winningBid;
     private Auction.AuctionStatus status;
     private int totalBids;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
 
     public static AuctionDTO fromEntity(Auction auction) {

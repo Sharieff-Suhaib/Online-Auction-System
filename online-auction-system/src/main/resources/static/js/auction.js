@@ -1,3 +1,10 @@
+/**
+ * Online Auction System - Professional UI
+ *
+ * @author Sharieff-Suhaib
+ * @since 2025-10-21 17:20:01 UTC
+ */
+
 let websocket = null;
 let currentUser = null;
 let auctions = [];
@@ -10,7 +17,7 @@ let selectedImageFile = null;
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🏆 Online Auction System Initialized');
     console.log('👤 Developer: Sharieff-Suhaib');
-    console.log('📅 Date: 2025-10-21 16:53:42 UTC');
+    console.log('📅 Date: 2025-10-21 17:20:01 UTC');
 
     const userStr = localStorage.getItem('currentUser');
     if (userStr) {
@@ -54,24 +61,20 @@ window.previewImage = function(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
         alert('Image size must be less than 5MB');
         event.target.value = '';
         return;
     }
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
         alert('Please select an image file');
         event.target.value = '';
         return;
     }
 
-    // Store the file for later upload
     selectedImageFile = file;
 
-    // Show preview
     const reader = new FileReader();
     reader.onload = function(e) {
         document.getElementById('preview-img').src = e.target.result;
@@ -80,7 +83,6 @@ window.previewImage = function(event) {
     reader.readAsDataURL(file);
 };
 
-// ✅ NEW: Upload image to server
 async function uploadImage(file) {
     const formData = new FormData();
     formData.append('file', file);
@@ -96,7 +98,7 @@ async function uploadImage(file) {
     }
 
     const data = await response.json();
-    return data.imageUrl; // Returns: /images/products/uuid.jpg
+    return data.imageUrl;
 }
 
 // ============================================================================
@@ -179,13 +181,11 @@ document.getElementById('sell-form')?.addEventListener('submit', async (e) => {
     submitBtn.disabled = true;
 
     try {
-        // ✅ STEP 1: Upload Image First
         const imageUrl = await uploadImage(selectedImageFile);
         console.log('✅ Image uploaded:', imageUrl);
 
         submitBtn.textContent = '⏳ Creating product...';
 
-        // Get auction timing
         const startValue = document.getElementById('auction-start').value;
         const durationMinutes = parseInt(document.getElementById('auction-duration').value);
 
@@ -201,13 +201,12 @@ document.getElementById('sell-form')?.addEventListener('submit', async (e) => {
 
         const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
 
-        // ✅ STEP 2: Create Product (with short URL, not Base64)
         const productData = {
             name: document.getElementById('product-name').value,
             description: document.getElementById('product-description').value,
             category: document.getElementById('product-category').value,
             startingPrice: parseFloat(document.getElementById('product-price').value),
-            imageUrl: imageUrl, // ✅ Short URL instead of Base64
+            imageUrl: imageUrl,
             sellerId: currentUser.id
         };
 
@@ -227,7 +226,6 @@ document.getElementById('sell-form')?.addEventListener('submit', async (e) => {
 
         submitBtn.textContent = '⏳ Creating auction...';
 
-        // ✅ STEP 3: Create Auction
         const auctionData = {
             productId: product.id,
             startTime: startTime.toISOString(),
@@ -323,24 +321,21 @@ function showWebSocketStatus(status) {
 }
 
 function handleNewBid(bidMessage) {
-    const auctionCard = document.querySelector(`[data-auction-id="${bidMessage.auctionId}"]`);
+    // Update in detail modal if open
+    const detailModal = document.getElementById('auction-detail-modal');
+    if (detailModal && !detailModal.classList.contains('hidden')) {
+        const auctionId = detailModal.getAttribute('data-auction-id');
+        if (auctionId == bidMessage.auctionId) {
+            updateAuctionDetail(bidMessage.auctionId);
+        }
+    }
 
+    // Update in card view
+    const auctionCard = document.querySelector(`[data-auction-id="${bidMessage.auctionId}"]`);
     if (auctionCard) {
         const currentBidElement = auctionCard.querySelector('.current-bid');
         if (currentBidElement) {
             currentBidElement.textContent = `$${bidMessage.bidAmount.toFixed(2)}`;
-            currentBidElement.classList.add('fade-in');
-        }
-
-        const bidHistory = auctionCard.querySelector('.bid-history');
-        if (bidHistory) {
-            const bidItem = document.createElement('div');
-            bidItem.className = 'bid-item winning';
-            bidItem.innerHTML = `
-                <span><strong>${bidMessage.username}</strong></span>
-                <span>$${bidMessage.bidAmount.toFixed(2)}</span>
-            `;
-            bidHistory.insertBefore(bidItem, bidHistory.firstChild);
         }
     }
 
@@ -379,73 +374,181 @@ function displayAuctions(auctionList) {
         container.innerHTML = '<p class="text-center">No auctions available. Be the first to create one!</p>';
         return;
     }
+    if (auctionList.length > 0) {
+            console.log('📅 First auction endTime:', auctionList[0].endTime);
+            console.log('📅 Type:', typeof auctionList[0].endTime);
+            console.log('📅 Parsed date:', new Date(auctionList[0].endTime));
+        }
 
     container.innerHTML = auctionList.map(auction => `
-        <div class="auction-card" data-auction-id="${auction.id}">
+        <div class="auction-card" data-auction-id="${auction.id}" onclick="showAuctionDetail(${auction.id})">
             <div class="auction-image">
                 ${auction.productImageUrl ?
-                    `<img src="${auction.productImageUrl}" alt="${auction.productName}" style="width:100%;height:100%;object-fit:cover;" />` :
-                    '📦'}
+                    `<img src="${auction.productImageUrl}" alt="${auction.productName}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2250%22>📦</text></svg>'" />` :
+                    '<div class="no-image">📦</div>'}
             </div>
             <div class="auction-content">
                 <span class="auction-status status-${auction.status.toLowerCase()}">
                     ${auction.status}
                 </span>
-                <h3>${auction.productName}</h3>
-                <p>${auction.productDescription || 'No description available'}</p>
-                <div class="current-bid">$${auction.currentBid.toFixed(2)}</div>
-                <div class="auction-timer" data-end-time="${auction.endTime}">
-                    ${getTimeRemaining(auction.endTime)}
+                <h3 class="auction-title">${auction.productName}</h3>
+                <p class="auction-description">${(auction.productDescription || 'No description').substring(0, 80)}${auction.productDescription && auction.productDescription.length > 80 ? '...' : ''}</p>
+
+                <div class="auction-info">
+                    <div class="info-item">
+                        <span class="info-label">Current Bid</span>
+                        <span class="current-bid">$${auction.currentBid.toFixed(2)}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Time Left</span>
+                        <span class="auction-timer" data-end-time="${auction.endTime}">
+                            ${getTimeRemaining(auction.endTime)}
+                        </span>
+                    </div>
                 </div>
-                <p class="text-center"><strong>${auction.totalBids}</strong> bids</p>
 
-                ${auction.status === 'LIVE' ? `
-                    <div class="bid-form">
-                        <input type="number"
-                               id="bid-amount-${auction.id}"
-                               placeholder="Enter your bid"
-                               min="${parseFloat(auction.currentBid) + parseFloat(auction.minimumIncrement)}"
-                               step="${auction.minimumIncrement}" />
-                        <button class="btn btn-success"
-                                onclick="placeBid(${auction.id})">
-                            💰 Place Bid
-                        </button>
-                    </div>
-                    <p style="margin-top: 0.5rem; color: var(--text-light); font-size: 0.9rem;">
-                        Minimum bid: $${(parseFloat(auction.currentBid) + parseFloat(auction.minimumIncrement)).toFixed(2)}
-                    </p>
-                ` : auction.status === 'SCHEDULED' ? `
-                    <p style="text-align: center; color: var(--warning-color); font-weight: 600;">
-                        ⏰ Auction starts soon!
-                    </p>
-                ` : ''}
+                <div class="auction-stats">
+                    <span class="stat-item">👥 ${auction.totalBids} bids</span>
+                    ${auction.status === 'LIVE' ? '<span class="stat-item live-indicator">🔴 Live Now</span>' : ''}
+                </div>
 
-                ${auction.status === 'COMPLETED' && auction.winnerName ? `
-                    <div class="success-message">
-                        🏆 Won by <strong>${auction.winnerName}</strong> for $${auction.winningBid.toFixed(2)}
-                    </div>
-                ` : auction.status === 'COMPLETED' ? `
-                    <div class="error-message">
-                        ❌ Auction ended with no bids
-                    </div>
-                ` : ''}
-
-                <div class="bid-history" id="bid-history-${auction.id}"></div>
+                <button class="btn btn-primary btn-block btn-view-details" onclick="event.stopPropagation(); showAuctionDetail(${auction.id})">
+                    ${auction.status === 'LIVE' ? '💰 Place Bid' : '👁️ View Details'}
+                </button>
             </div>
         </div>
     `).join('');
-
-    auctionList.forEach(auction => loadBidHistory(auction.id));
 }
 
-async function placeBid(auctionId) {
+// ✅ NEW: Show Auction Detail Modal
+async function showAuctionDetail(auctionId) {
+    try {
+        const response = await fetch(`/api/auctions/${auctionId}`);
+        const auction = await response.json();
+
+        const modal = document.getElementById('auction-detail-modal') || createDetailModal();
+        modal.setAttribute('data-auction-id', auctionId);
+
+        // Load bid history
+        const bidsResponse = await fetch(`/api/bids/auction/${auctionId}`);
+        const bids = await bidsResponse.json();
+
+        const bidHistoryHTML = bids.length === 0 ?
+            '<p class="no-bids">No bids yet. Be the first to bid!</p>' :
+            bids.map((bid, index) => `
+                <div class="bid-item-detail ${index === 0 ? 'winning' : ''}">
+                    <div class="bid-user">
+                        <span class="bid-rank">#${index + 1}</span>
+                        <span class="bid-username">${bid.username}</span>
+                        ${index === 0 ? '<span class="winning-badge">🏆 Winning</span>' : ''}
+                    </div>
+                    <div class="bid-info">
+                        <span class="bid-amount-detail">$${bid.bidAmount.toFixed(2)}</span>
+                        <span class="bid-time">${new Date(bid.bidTime).toLocaleString()}</span>
+                    </div>
+                </div>
+            `).join('');
+
+        modal.innerHTML = `
+            <div class="modal-content modal-detail">
+                <span class="close" onclick="closeAuctionDetail()">&times;</span>
+
+                <div class="detail-grid">
+                    <div class="detail-left">
+                        <div class="detail-image">
+                            ${auction.productImageUrl ?
+                                `<img src="${auction.productImageUrl}" alt="${auction.productName}" />` :
+                                '<div class="no-image-large">📦</div>'}
+                        </div>
+                    </div>
+
+                    <div class="detail-right">
+                        <span class="auction-status status-${auction.status.toLowerCase()}">${auction.status}</span>
+                        <h2>${auction.productName}</h2>
+                        <p class="detail-description">${auction.productDescription || 'No description available'}</p>
+
+                        <div class="detail-price-section">
+                            <div class="price-item">
+                                <span class="price-label">Current Bid</span>
+                                <span class="price-value">$${auction.currentBid.toFixed(2)}</span>
+                            </div>
+                            <div class="price-item">
+                                <span class="price-label">Min. Increment</span>
+                                <span class="price-increment">+$${auction.minimumIncrement.toFixed(2)}</span>
+                            </div>
+                        </div>
+
+                        <div class="detail-timer">
+                            <span class="timer-label">⏰ Time Remaining:</span>
+                            <span class="timer-value" data-end-time="${auction.endTime}">
+                                ${getTimeRemaining(auction.endTime)}
+                            </span>
+                        </div>
+
+                        ${auction.status === 'LIVE' && currentUser ? `
+                            <div class="bid-input-section">
+                                <input type="number"
+                                       id="bid-amount-modal"
+                                       class="bid-input-modal"
+                                       placeholder="Enter your bid amount"
+                                       min="${parseFloat(auction.currentBid) + parseFloat(auction.minimumIncrement)}"
+                                       step="${auction.minimumIncrement}" />
+                                <button class="btn btn-success btn-place-bid" onclick="placeBidModal(${auctionId})">
+                                    💰 Place Bid
+                                </button>
+                            </div>
+                            <p class="min-bid-note">Minimum bid: $${(parseFloat(auction.currentBid) + parseFloat(auction.minimumIncrement)).toFixed(2)}</p>
+                        ` : !currentUser && auction.status === 'LIVE' ? `
+                            <div class="login-prompt">
+                                <p>Please <a href="/login">login</a> to place a bid</p>
+                            </div>
+                        ` : ''}
+
+                        ${auction.status === 'COMPLETED' && auction.winnerName ? `
+                            <div class="winner-section">
+                                <h3>🏆 Auction Winner</h3>
+                                <p><strong>${auction.winnerName}</strong> won with a bid of <strong>$${auction.winningBid.toFixed(2)}</strong></p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <div class="bid-history-section">
+                    <h3>📊 Bid History (${bids.length} bids)</h3>
+                    <div class="bid-history-scroll">
+                        ${bidHistoryHTML}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        modal.classList.remove('hidden');
+    } catch (error) {
+        console.error('❌ Error loading auction detail:', error);
+        showNotification('Error loading auction details', 'error');
+    }
+}
+
+function createDetailModal() {
+    const modal = document.createElement('div');
+    modal.id = 'auction-detail-modal';
+    modal.className = 'modal hidden';
+    document.body.appendChild(modal);
+    return modal;
+}
+
+function closeAuctionDetail() {
+    document.getElementById('auction-detail-modal')?.classList.add('hidden');
+}
+
+async function placeBidModal(auctionId) {
     if (!currentUser) {
         showNotification('Please login to place a bid', 'error');
         window.location.href = '/login';
         return;
     }
 
-    const bidAmountInput = document.getElementById(`bid-amount-${auctionId}`);
+    const bidAmountInput = document.getElementById('bid-amount-modal');
     const bidAmount = parseFloat(bidAmountInput.value);
 
     if (!bidAmount || bidAmount <= 0) {
@@ -467,7 +570,10 @@ async function placeBid(auctionId) {
         if (response.ok) {
             showNotification('✅ Bid placed successfully!', 'success');
             bidAmountInput.value = '';
-            loadBidHistory(auctionId);
+            // Reload auction detail
+            setTimeout(() => showAuctionDetail(auctionId), 500);
+            // Reload card view
+            loadAuctions();
         } else {
             const error = await response.json();
             showNotification(error.message || 'Failed to place bid', 'error');
@@ -478,28 +584,11 @@ async function placeBid(auctionId) {
     }
 }
 
-async function loadBidHistory(auctionId) {
-    try {
-        const response = await fetch(`/api/bids/auction/${auctionId}`);
-        const bids = await response.json();
-
-        const bidHistory = document.getElementById(`bid-history-${auctionId}`);
-        if (!bidHistory) return;
-
-        if (bids.length === 0) {
-            bidHistory.innerHTML = '<p class="text-center" style="color: var(--text-light); font-size: 0.9rem;">No bids yet. Be the first!</p>';
-            return;
-        }
-
-        bidHistory.innerHTML = bids.slice(0, 5).map((bid, index) => `
-            <div class="bid-item ${index === 0 ? 'winning' : ''}">
-                <span>${bid.username}</span>
-                <span>$${bid.bidAmount.toFixed(2)}</span>
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error('❌ Error loading bid history:', error);
+async function updateAuctionDetail(auctionId) {
+    if (document.getElementById('auction-detail-modal')?.classList.contains('hidden')) {
+        return;
     }
+    await showAuctionDetail(auctionId);
 }
 
 // ============================================================================
@@ -507,12 +596,37 @@ async function loadBidHistory(auctionId) {
 // ============================================================================
 
 function getTimeRemaining(endTime) {
-    const end = new Date(endTime);
+    if (!endTime) {
+        console.warn('No endTime provided');
+        return '⏰ No time set';
+    }
+
+    let end;
+    try {
+        if (Array.isArray(endTime)) {
+            const [year, month, day, hour, minute, second] = endTime;
+            end = new Date(year, month - 1, day, hour, minute, second);
+        } else if (typeof endTime === 'string') {
+            end = new Date(endTime);
+        } else {
+            console.error('Unknown date format:', endTime);
+            return '⏰ Invalid date';
+        }
+
+        if (isNaN(end.getTime())) {
+            console.error('Invalid date after parsing:', endTime);
+            return '⏰ Invalid date';
+        }
+    } catch (error) {
+        console.error('Date parsing error:', error, endTime);
+        return '⏰ Invalid date';
+    }
+
     const now = new Date();
     const diff = end - now;
 
     if (diff <= 0) {
-        return '⏰ Auction Ended';
+        return '⏰ Ended';
     }
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -520,16 +634,24 @@ function getTimeRemaining(endTime) {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-    if (days > 0) return `⏰ ${days}d ${hours}h ${minutes}m`;
-    if (hours > 0) return `⏰ ${hours}h ${minutes}m ${seconds}s`;
-    return `⏰ ${minutes}m ${seconds}s`;
+    if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+    if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+    return `${minutes}m ${seconds}s`;
 }
 
 function startTimerUpdates() {
     setInterval(() => {
         document.querySelectorAll('.auction-timer').forEach(timer => {
             const endTime = timer.getAttribute('data-end-time');
-            timer.textContent = getTimeRemaining(endTime);
+            if (endTime) {
+                timer.textContent = getTimeRemaining(endTime);
+            }
+        });
+        document.querySelectorAll('.timer-value').forEach(timer => {
+            const endTime = timer.getAttribute('data-end-time');
+            if (endTime) {
+                timer.textContent = getTimeRemaining(endTime);
+            }
         });
     }, 1000);
 }
@@ -573,96 +695,14 @@ window.filterAuctions = function(status) {
     displayAuctions(filtered);
 };
 
-// Add animations and styles
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    @keyframes slideOut {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
-    }
-    .modal {
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.7);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .modal-content {
-        background: white;
-        padding: 2rem;
-        border-radius: 1rem;
-        max-width: 600px;
-        width: 90%;
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-    .modal-content h2 {
-        margin-bottom: 1.5rem;
-        color: var(--primary-color);
-    }
-    .modal-content h3 {
-        margin: 1.5rem 0 1rem 0;
-        color: var(--text-dark);
-        font-size: 1.1rem;
-    }
-    .close {
-        float: right;
-        font-size: 2rem;
-        cursor: pointer;
-        color: var(--danger-color);
-    }
-    .close:hover {
-        color: var(--text-dark);
-    }
-    .image-preview {
-        margin-top: 1rem;
-        text-align: center;
-    }
-    .image-preview img {
-        max-width: 100%;
-        max-height: 200px;
-        border-radius: 0.5rem;
-        border: 2px solid var(--border-color);
-    }
-    .form-section {
-        background: var(--light-bg);
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin: 1rem 0;
-    }
-    .auction-summary {
-        background: #e0f2fe;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin: 1rem 0;
-        border-left: 4px solid var(--primary-color);
-    }
-    .auction-summary h4 {
-        margin-bottom: 0.5rem;
-        color: var(--primary-color);
-    }
-    .auction-summary p {
-        margin: 0;
-        line-height: 1.8;
-    }
-    .form-group small {
-        display: block;
-        margin-top: 0.25rem;
-        color: var(--text-light);
-        font-size: 0.875rem;
-    }
-`;
-document.head.appendChild(style);
+// Make functions global
+window.showSellModal = showSellModal;
+window.closeSellModal = closeSellModal;
+window.showAuctionDetail = showAuctionDetail;
+window.closeAuctionDetail = closeAuctionDetail;
+window.placeBidModal = placeBidModal;
+window.logout = logout;
 
 console.log('✅ Auction System JavaScript Loaded Successfully');
 console.log('👤 Developer: Sharieff-Suhaib');
-console.log('📅 Date: 2025-10-21 15:06:02 UTC');
+console.log('📅 Date: 2025-10-21 17:20:01 UTC');

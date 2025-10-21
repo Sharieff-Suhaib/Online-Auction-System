@@ -1,6 +1,7 @@
 package com.auction.online_auction_system.dto;
 
 import com.auction.online_auction_system.entity.Bid;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
@@ -11,7 +12,6 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
 
 @Data
 @Builder
@@ -33,7 +33,10 @@ public class BidDTO {
     private BigDecimal bidAmount;
 
     private Boolean isWinning;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime bidTime;
+
     private String ipAddress;
 
     public static BidDTO fromEntity(Bid bid) {
