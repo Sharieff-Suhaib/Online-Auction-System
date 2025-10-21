@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Online Auction System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+    <div class="container">
+        <div class="nav-brand">
+            <h1>🏆 Auction System</h1>
+        </div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/auction">Live Auctions</a>
+            <a href="/register" class="active">Register</a>
+            <a href="/login">Login</a>
+        </div>
+    </div>
+</nav>
+
+<section class="auth-container">
+    <div class="auth-card">
+        <h2>Create Account</h2>
+        <p class="subtitle">Join our auction platform today!</p>
+
+        <div id="error-message" class="error-message hidden"></div>
+        <div id="success-message" class="success-message hidden"></div>
+
+        <form id="register-form">
+            <div class="form-group">
+                <label for="username">Username *</label>
+                <input type="text" id="username" required minlength="3" maxlength="50">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password *</label>
+                <input type="password" id="password" required minlength="6">
+            </div>
+
+            <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName">
+            </div>
+
+            <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" id="lastName">
+            </div>
+
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number</label>
+                <input type="tel" id="phoneNumber">
+            </div>
+
+            <div class="form-group">
+                <label for="role">Account Type *</label>
+                <select id="role" required>
+                    <option value="BIDDER">Bidder</option>
+                    <option value="SELLER">Seller</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Register</button>
+        </form>
+
+        <div class="auth-footer">
+            Already have an account? <a href="/login">Login here</a>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <p>&copy; 2025 Online Auction System</p>
+        <p>Developer: <strong>Sharieff-Suhaib</strong></p>
+        <p>Date: 2025-10-21 14:38:21 UTC</p>
+    </div>
+</footer>
+
+<!-- ✅ INLINE SCRIPT ONLY -->
+<script>
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const errorDiv = document.getElementById('error-message');
+        const successDiv = document.getElementById('success-message');
+
+        errorDiv.classList.add('hidden');
+        successDiv.classList.add('hidden');
+
+        const formData = {
+            username: document.getElementById('username').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            phoneNumber: document.getElementById('phoneNumber').value,
+            role: document.getElementById('role').value
+        };
+
+        try {
+            const response = await fetch('/api/users/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                successDiv.textContent = '✅ Registration successful! Redirecting...';
+                successDiv.classList.remove('hidden');
+                setTimeout(() => window.location.href = '/login', 2000);
+            } else {
+                const error = await response.json();
+                errorDiv.textContent = error.message || 'Registration failed';
+                errorDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('❌ Registration error:', error);
+            errorDiv.textContent = 'An error occurred during registration';
+            errorDiv.classList.remove('hidden');
+        }
+    });
+
+    console.log('📝 Registration Page - Sharieff-Suhaib - 2025-10-21 14:38:21 UTC');
+</script>
+</body>
+</html>

@@ -118,4 +118,9 @@ public class UserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new AuctionException("User not found with id: " + id));
     }
+
+    public User getUserEntityByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new AuctionException("User not found with username: " + username));
+    }
 }

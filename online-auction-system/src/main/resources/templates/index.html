@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Auction System - Home</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+    <div class="container">
+        <div class="nav-brand">
+            <h1>🏆 Auction System</h1>
+        </div>
+        <div class="nav-links">
+            <a href="/" class="active">Home</a>
+            <a href="/auction">Live Auctions</a>
+            <a href="/register" id="nav-register">Register</a>
+            <a href="/login" id="nav-login">Login</a>
+            <a href="#" id="nav-username" class="hidden"></a>
+            <a href="#" id="nav-logout" class="hidden" onclick="logout()">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="container">
+        <h1>Welcome to Online Auction System</h1>
+        <p>Bid on amazing products in real-time auctions!</p>
+        <div class="hero-buttons">
+            <a href="/auction" class="btn btn-primary">View Live Auctions</a>
+            <a href="/register" class="btn btn-secondary">Get Started</a>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <p>&copy; 2025 Online Auction System</p>
+        <p>Developer: <strong>Sharieff-Suhaib</strong></p>
+        <p>Date: 2025-10-21 14:38:21 UTC</p>
+    </div>
+</footer>
+
+<!-- ✅ INLINE SCRIPT ONLY - NO EXTERNAL SCRIPT -->
+<script>
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    if (currentUser) {
+        document.getElementById('nav-login').classList.add('hidden');
+        document.getElementById('nav-register').classList.add('hidden');
+        document.getElementById('nav-username').classList.remove('hidden');
+        document.getElementById('nav-username').textContent = `👤 ${currentUser.username}`;
+        document.getElementById('nav-logout').classList.remove('hidden');
+    }
+    function logout() {
+        localStorage.removeItem('currentUser');
+        window.location.reload();
+    }
+</script>
+</body>
+</html>

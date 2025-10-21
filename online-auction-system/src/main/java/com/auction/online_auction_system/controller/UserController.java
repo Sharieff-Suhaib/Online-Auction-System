@@ -1,14 +1,17 @@
 package com.auction.online_auction_system.controller;
 
 import com.auction.online_auction_system.dto.UserDTO;
+import com.auction.online_auction_system.entity.User;
 import com.auction.online_auction_system.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -18,6 +21,29 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
+        String username = credentials.get("username");
+        String password = credentials.get("password");
+
+        try {
+            User user = userService.getUserEntityByUsername(username);
+
+            // ✅ VALIDATE PASSWORD using BCrypt
+            if (password != null && passwordEncoder.matches(password, user.getPassword())) {
+                // Convert to DTO (without password)
+                UserDTO userDTO = UserDTO.fromEntity(user);
+                return ResponseEntity.ok(userDTO);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Invalid password"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Invalid username"));
+        }
+    }
 
     @PostMapping("/register")
     public ResponseEntity<UserDTO> registerUser(@Valid @RequestBody UserDTO userDTO) {
