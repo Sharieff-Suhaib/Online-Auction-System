@@ -1,6 +1,6 @@
 package com.auction.online_auction_system.config;
 
-import com.auction.online.websocket.WebSocketHandler;
+import com.auction.online_auction_system.websocket.WebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;

@@ -11,16 +11,22 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * User Entity - Represents a user in the auction system
+ * Using Lombok - No manual getters/setters needed!
+ *
+ * @author Sharieff-Suhaib
+ * @since 2025-10-21 13:32:09 UTC
+ */
 @Entity
 @Table(name = "users", indexes = {
         @Index(name = "idx_username", columnList = "username"),
         @Index(name = "idx_email", columnList = "email"),
         @Index(name = "idx_user_active", columnList = "is_active")
 })
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Data  // ← Generates getters, setters, toString, equals, hashCode
+@NoArgsConstructor  // ← Generates no-args constructor
+@AllArgsConstructor  // ← Generates all-args constructor
 public class User {
 
     @Id

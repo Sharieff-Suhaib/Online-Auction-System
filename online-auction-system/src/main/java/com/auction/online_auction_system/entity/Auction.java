@@ -1,6 +1,5 @@
 package com.auction.online_auction_system.entity;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,12 +14,7 @@ import java.util.List;
 
 
 @Entity
-@Table(name = "auctions", indexes = {
-        @Index(name = "idx_auction_status", columnList = "status"),
-        @Index(name = "idx_auction_start_time", columnList = "start_time"),
-        @Index(name = "idx_auction_end_time", columnList = "end_time"),
-        @Index(name = "idx_auction_product", columnList = "product_id")
-})
+@Table(name = "auctions")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,7 +25,7 @@ public class Auction {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false, foreignKey = @ForeignKey(name = "fk_auction_product"))
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
     @Column(name = "start_time", nullable = false)
@@ -50,7 +44,7 @@ public class Auction {
     private List<Bid> bids = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "winner_id", foreignKey = @ForeignKey(name = "fk_auction_winner"))
+    @JoinColumn(name = "winner_id")
     private User winner;
 
     @Column(name = "winning_bid", precision = 10, scale = 2)

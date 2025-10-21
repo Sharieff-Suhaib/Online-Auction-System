@@ -1,6 +1,5 @@
 package com.auction.online_auction_system.entity;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,13 +12,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Entity
-@Table(name = "products", indexes = {
-        @Index(name = "idx_product_status", columnList = "status"),
-        @Index(name = "idx_product_category", columnList = "category"),
-        @Index(name = "idx_product_seller", columnList = "seller_id")
-})
+@Table(name = "products")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -48,7 +42,7 @@ public class Product {
     private BigDecimal reservePrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_id", nullable = false, foreignKey = @ForeignKey(name = "fk_product_seller"))
+    @JoinColumn(name = "seller_id", nullable = false)
     private User seller;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)

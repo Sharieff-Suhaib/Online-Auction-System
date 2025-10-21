@@ -1,6 +1,5 @@
 package com.auction.online_auction_system.entity;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,12 +11,7 @@ import java.time.LocalDateTime;
 
 
 @Entity
-@Table(name = "bids", indexes = {
-        @Index(name = "idx_bid_auction", columnList = "auction_id"),
-        @Index(name = "idx_bid_user", columnList = "user_id"),
-        @Index(name = "idx_bid_amount", columnList = "bid_amount"),
-        @Index(name = "idx_bid_time", columnList = "bid_time")
-})
+@Table(name = "bids")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,11 +22,11 @@ public class Bid {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "auction_id", nullable = false, foreignKey = @ForeignKey(name = "fk_bid_auction"))
+    @JoinColumn(name = "auction_id", nullable = false)
     private Auction auction;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_bid_user"))
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(name = "bid_amount", nullable = false, precision = 10, scale = 2)

@@ -48,9 +48,6 @@ public class WebSocketHandler extends TextWebSocketHandler {
         sessions.remove(session);
     }
 
-    /**
-     * Broadcast bid to all connected clients
-     */
     public void broadcastBid(BidMessage bidMessage) {
         try {
             String message = objectMapper.writeValueAsString(bidMessage);
