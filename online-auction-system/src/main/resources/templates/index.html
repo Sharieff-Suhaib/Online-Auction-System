@@ -29,7 +29,35 @@
         <p>Bid on amazing products in real-time auctions!</p>
         <div class="hero-buttons">
             <a href="/auction" class="btn btn-primary">View Live Auctions</a>
-            <a href="/register" class="btn btn-secondary">Get Started</a>
+            <a href="/register" id="hero-register-btn" class="btn btn-secondary">Get Started</a>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <div class="container">
+        <h2>Why Choose Our Platform?</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Real-Time Bidding</h3>
+                <p>Experience live auctions with instant updates</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Secure Platform</h3>
+                <p>Your data is protected with industry-standard security</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Transparent Process</h3>
+                <p>Track all bids and auction history in real-time</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🏆</div>
+                <h3>Win Amazing Products</h3>
+                <p>Bid on a wide variety of products</p>
+            </div>
         </div>
     </div>
 </section>
@@ -38,24 +66,29 @@
     <div class="container">
         <p>&copy; 2025 Online Auction System</p>
         <p>Developer: <strong>Sharieff-Suhaib</strong></p>
-        <p>Date: 2025-10-21 14:38:21 UTC</p>
+        <p>Date: 2025-10-25 07:01:22 UTC</p>
     </div>
 </footer>
 
-<!-- ✅ INLINE SCRIPT ONLY - NO EXTERNAL SCRIPT -->
 <script>
     const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+
     if (currentUser) {
         document.getElementById('nav-login').classList.add('hidden');
         document.getElementById('nav-register').classList.add('hidden');
+        document.getElementById('hero-register-btn').classList.add('hidden');
+
         document.getElementById('nav-username').classList.remove('hidden');
         document.getElementById('nav-username').textContent = `👤 ${currentUser.username}`;
         document.getElementById('nav-logout').classList.remove('hidden');
     }
+
     function logout() {
         localStorage.removeItem('currentUser');
         window.location.reload();
     }
+
+    console.log('🏠 Home Page - Sharieff-Suhaib - 2025-10-25 07:01:22 UTC');
 </script>
 </body>
 </html>

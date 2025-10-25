@@ -54,11 +54,18 @@
     <div class="container">
         <p>&copy; 2025 Online Auction System</p>
         <p>Developer: <strong>Sharieff-Suhaib</strong></p>
-        <p>Date: 2025-10-21 17:31:37 UTC</p>
+        <p>Date: 2025-10-25 07:01:22 UTC</p>
     </div>
 </footer>
 
 <script>
+    // ✅ Redirect if already logged in
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    if (currentUser) {
+        console.log('✅ Already logged in, redirecting to auction page...');
+        window.location.href = '/auction';
+    }
+
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -97,7 +104,7 @@
         }
     });
 
-    console.log('🔐 Login Page - Sharieff-Suhaib - 2025-10-21 17:31:37 UTC');
+    console.log('🔐 Login Page - Sharieff-Suhaib - 2025-10-25 07:01:22 UTC');
 </script>
 </body>
 </html>

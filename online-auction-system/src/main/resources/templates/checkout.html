@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Online Auction System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+    <div class="container">
+        <div class="nav-brand">
+            <h1>🏆 Auction System</h1>
+        </div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/auction">Live Auctions</a>
+            <a href="/checkout" class="active">Checkout</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<section class="checkout-container">
+    <div class="container">
+        <h1>🛒 Checkout - Won Items</h1>
+
+        <div class="checkout-grid">
+            <!-- Won Items List -->
+            <div class="won-items-section">
+                <h2>Your Won Auctions</h2>
+                <div id="won-items-list">
+                    <div class="loading"></div>
+                </div>
+            </div>
+
+            <!-- Payment Summary -->
+            <div class="payment-summary">
+                <h2>Payment Summary</h2>
+                <div class="summary-item">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">$0.00</span>
+                </div>
+                <div class="summary-item">
+                    <span>Shipping:</span>
+                    <span id="shipping">$15.00</span>
+                </div>
+                <div class="summary-item">
+                    <span>Tax (10%):</span>
+                    <span id="tax">$0.00</span>
+                </div>
+                <hr>
+                <div class="summary-item total">
+                    <span>Total:</span>
+                    <span id="total">$0.00</span>
+                </div>
+
+                <button class="btn btn-success btn-block" onclick="proceedToPayment()">
+                    💳 Proceed to Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <p>&copy; 2025 Online Auction System</p>
+        <p>Developer: <strong>Sharieff-Suhaib</strong></p>
+    </div>
+</footer>
+
+<script src="/js/checkout.js"></script>
+</body>
+</html>

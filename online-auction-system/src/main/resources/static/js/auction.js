@@ -1,8 +1,8 @@
 /**
- * Online Auction System - Professional UI
+ * Online Auction System - INR Currency
  *
  * @author Sharieff-Suhaib
- * @since 2025-10-21 17:20:01 UTC
+ * @since 2025-10-25 06:56:32 UTC
  */
 
 let websocket = null;
@@ -11,13 +11,21 @@ let auctions = [];
 let selectedImageFile = null;
 
 // ============================================================================
+// CURRENCY FORMATTER
+// ============================================================================
+
+function formatCurrency(amount) {
+    return `₹${parseFloat(amount).toFixed(2)}`;
+}
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🏆 Online Auction System Initialized');
     console.log('👤 Developer: Sharieff-Suhaib');
-    console.log('📅 Date: 2025-10-21 17:20:01 UTC');
+    console.log('📅 Date: 2025-10-25 06:56:32 UTC');
 
     const userStr = localStorage.getItem('currentUser');
     if (userStr) {
@@ -42,8 +50,15 @@ function updateNavbar() {
     if (currentUser) {
         document.getElementById('nav-login')?.classList.add('hidden');
         document.getElementById('nav-register')?.classList.add('hidden');
+
         document.getElementById('nav-sell')?.classList.remove('hidden');
         document.getElementById('nav-logout')?.classList.remove('hidden');
+
+        const usernameEl = document.getElementById('nav-username');
+        if (usernameEl) {
+            usernameEl.classList.remove('hidden');
+            usernameEl.textContent = `👤 ${currentUser.username}`;
+        }
     }
 }
 
@@ -201,6 +216,17 @@ document.getElementById('sell-form')?.addEventListener('submit', async (e) => {
 
         const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
 
+        // ✅ Format dates without timezone
+        const formatDateTime = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+        };
+
         const productData = {
             name: document.getElementById('product-name').value,
             description: document.getElementById('product-description').value,
@@ -228,8 +254,8 @@ document.getElementById('sell-form')?.addEventListener('submit', async (e) => {
 
         const auctionData = {
             productId: product.id,
-            startTime: startTime.toISOString(),
-            endTime: endTime.toISOString(),
+            startTime: formatDateTime(startTime),
+            endTime: formatDateTime(endTime),
             minimumIncrement: parseFloat(document.getElementById('bid-increment').value)
         };
 
@@ -321,7 +347,6 @@ function showWebSocketStatus(status) {
 }
 
 function handleNewBid(bidMessage) {
-    // Update in detail modal if open
     const detailModal = document.getElementById('auction-detail-modal');
     if (detailModal && !detailModal.classList.contains('hidden')) {
         const auctionId = detailModal.getAttribute('data-auction-id');
@@ -330,16 +355,15 @@ function handleNewBid(bidMessage) {
         }
     }
 
-    // Update in card view
     const auctionCard = document.querySelector(`[data-auction-id="${bidMessage.auctionId}"]`);
     if (auctionCard) {
         const currentBidElement = auctionCard.querySelector('.current-bid');
         if (currentBidElement) {
-            currentBidElement.textContent = `$${bidMessage.bidAmount.toFixed(2)}`;
+            currentBidElement.textContent = formatCurrency(bidMessage.bidAmount);
         }
     }
 
-    showNotification(`New bid: $${bidMessage.bidAmount.toFixed(2)} by ${bidMessage.username}`);
+    showNotification(`New bid: ${formatCurrency(bidMessage.bidAmount)} by ${bidMessage.username}`);
 }
 
 // ============================================================================
@@ -374,11 +398,6 @@ function displayAuctions(auctionList) {
         container.innerHTML = '<p class="text-center">No auctions available. Be the first to create one!</p>';
         return;
     }
-    if (auctionList.length > 0) {
-            console.log('📅 First auction endTime:', auctionList[0].endTime);
-            console.log('📅 Type:', typeof auctionList[0].endTime);
-            console.log('📅 Parsed date:', new Date(auctionList[0].endTime));
-        }
 
     container.innerHTML = auctionList.map(auction => `
         <div class="auction-card" data-auction-id="${auction.id}" onclick="showAuctionDetail(${auction.id})">
@@ -397,7 +416,7 @@ function displayAuctions(auctionList) {
                 <div class="auction-info">
                     <div class="info-item">
                         <span class="info-label">Current Bid</span>
-                        <span class="current-bid">$${auction.currentBid.toFixed(2)}</span>
+                        <span class="current-bid">${formatCurrency(auction.currentBid)}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Time Left</span>
@@ -420,7 +439,6 @@ function displayAuctions(auctionList) {
     `).join('');
 }
 
-// ✅ NEW: Show Auction Detail Modal
 async function showAuctionDetail(auctionId) {
     try {
         const response = await fetch(`/api/auctions/${auctionId}`);
@@ -429,7 +447,6 @@ async function showAuctionDetail(auctionId) {
         const modal = document.getElementById('auction-detail-modal') || createDetailModal();
         modal.setAttribute('data-auction-id', auctionId);
 
-        // Load bid history
         const bidsResponse = await fetch(`/api/bids/auction/${auctionId}`);
         const bids = await bidsResponse.json();
 
@@ -443,7 +460,7 @@ async function showAuctionDetail(auctionId) {
                         ${index === 0 ? '<span class="winning-badge">🏆 Winning</span>' : ''}
                     </div>
                     <div class="bid-info">
-                        <span class="bid-amount-detail">$${bid.bidAmount.toFixed(2)}</span>
+                        <span class="bid-amount-detail">${formatCurrency(bid.bidAmount)}</span>
                         <span class="bid-time">${new Date(bid.bidTime).toLocaleString()}</span>
                     </div>
                 </div>
@@ -470,11 +487,11 @@ async function showAuctionDetail(auctionId) {
                         <div class="detail-price-section">
                             <div class="price-item">
                                 <span class="price-label">Current Bid</span>
-                                <span class="price-value">$${auction.currentBid.toFixed(2)}</span>
+                                <span class="price-value">${formatCurrency(auction.currentBid)}</span>
                             </div>
                             <div class="price-item">
                                 <span class="price-label">Min. Increment</span>
-                                <span class="price-increment">+$${auction.minimumIncrement.toFixed(2)}</span>
+                                <span class="price-increment">+${formatCurrency(auction.minimumIncrement)}</span>
                             </div>
                         </div>
 
@@ -497,7 +514,7 @@ async function showAuctionDetail(auctionId) {
                                     💰 Place Bid
                                 </button>
                             </div>
-                            <p class="min-bid-note">Minimum bid: $${(parseFloat(auction.currentBid) + parseFloat(auction.minimumIncrement)).toFixed(2)}</p>
+                            <p class="min-bid-note">Minimum bid: ${formatCurrency(parseFloat(auction.currentBid) + parseFloat(auction.minimumIncrement))}</p>
                         ` : !currentUser && auction.status === 'LIVE' ? `
                             <div class="login-prompt">
                                 <p>Please <a href="/login">login</a> to place a bid</p>
@@ -507,7 +524,7 @@ async function showAuctionDetail(auctionId) {
                         ${auction.status === 'COMPLETED' && auction.winnerName ? `
                             <div class="winner-section">
                                 <h3>🏆 Auction Winner</h3>
-                                <p><strong>${auction.winnerName}</strong> won with a bid of <strong>$${auction.winningBid.toFixed(2)}</strong></p>
+                                <p><strong>${auction.winnerName}</strong> won with a bid of <strong>${formatCurrency(auction.winningBid)}</strong></p>
                             </div>
                         ` : ''}
                     </div>
@@ -570,9 +587,7 @@ async function placeBidModal(auctionId) {
         if (response.ok) {
             showNotification('✅ Bid placed successfully!', 'success');
             bidAmountInput.value = '';
-            // Reload auction detail
             setTimeout(() => showAuctionDetail(auctionId), 500);
-            // Reload card view
             loadAuctions();
         } else {
             const error = await response.json();
@@ -596,10 +611,7 @@ async function updateAuctionDetail(auctionId) {
 // ============================================================================
 
 function getTimeRemaining(endTime) {
-    if (!endTime) {
-        console.warn('No endTime provided');
-        return '⏰ No time set';
-    }
+    if (!endTime) return '⏰ No time set';
 
     let end;
     try {
@@ -609,25 +621,18 @@ function getTimeRemaining(endTime) {
         } else if (typeof endTime === 'string') {
             end = new Date(endTime);
         } else {
-            console.error('Unknown date format:', endTime);
             return '⏰ Invalid date';
         }
 
-        if (isNaN(end.getTime())) {
-            console.error('Invalid date after parsing:', endTime);
-            return '⏰ Invalid date';
-        }
+        if (isNaN(end.getTime())) return '⏰ Invalid date';
     } catch (error) {
-        console.error('Date parsing error:', error, endTime);
         return '⏰ Invalid date';
     }
 
     const now = new Date();
     const diff = end - now;
 
-    if (diff <= 0) {
-        return '⏰ Ended';
-    }
+    if (diff <= 0) return '⏰ Ended';
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -695,7 +700,6 @@ window.filterAuctions = function(status) {
     displayAuctions(filtered);
 };
 
-// Make functions global
 window.showSellModal = showSellModal;
 window.closeSellModal = closeSellModal;
 window.showAuctionDetail = showAuctionDetail;
@@ -703,6 +707,4 @@ window.closeAuctionDetail = closeAuctionDetail;
 window.placeBidModal = placeBidModal;
 window.logout = logout;
 
-console.log('✅ Auction System JavaScript Loaded Successfully');
-console.log('👤 Developer: Sharieff-Suhaib');
-console.log('📅 Date: 2025-10-21 17:20:01 UTC');
+console.log('✅ Auction System (INR Currency) - Sharieff-Suhaib - 2025-10-25 06:56:32 UTC');
